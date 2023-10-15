@@ -2,7 +2,7 @@ library(tidyverse)
 library(caret)
 library(mlbench)
 
-
+## ML = Experimentations
 data("BostonHousing")
 
 
@@ -86,19 +86,80 @@ train_data <- prep_data[[1]]
 test_data <- prep_data[[2]]
 
 set.seed(42)
+# K-fold Cross Validation 
 ctrl <- trainControl(
   method = "cv", 
   number = 10,
   verboseIter = TRUE
 )
 
-## add preprocess
-model <-  train(medv ~ rm + b + crim, 
+# Better for K-fold is repeated K-fold, which all train = 25 round
+ctrl <- trainControl(
+  method = "cv", 
+  number = 5,
+  repeats = 5,
+  verboseIter = TRUE
+)
+
+## Tune Hyperparameter using k = 5
+model <-  train(medv ~ rm + b + crim + lstat + age, 
                 data = train_data,
-                method = 'lm',
-                preProcess = c("range", "nzv", "zv"),
-                # preProcess = c("center", "scale"), # standardization(z-score)
+                #method = 'lm', ## linearRegression
+                method = 'knn',
+                tuneLength = 5,
+                preProcess = c("range", "nzv", "zv"), ## Normalization
+                # preProcess = c("center", "scale"), ## standardization(z-score)
                 trControl = ctrl)
+
+## Train Final Model using k =11
+model_k11 <-  train(medv ~ rm + b + crim + lstat + age, 
+                data = train_data,
+                #method = 'lm', ## linearRegression
+                method = 'knn',
+                tuneGrid = data.frame(k = 11),
+                preProcess = c("range", "nzv", "zv"), ## Normalization
+                # preProcess = c("center", "scale"), ## standardization(z-score)
+                trControl = trainControl(method = 'none'))
+
+## Train Multi Model using k = 5, 7, 11
+multi_model <-  train(medv ~ rm + b + crim + lstat + age, 
+                    data = train_data,
+                    #method = 'lm', ## linearRegression
+                    method = 'knn',
+                    tuneGrid = data.frame(k = c(5, 7, 11)),
+                    preProcess = c("range", "nzv", "zv"), ## Normalization
+                    # preProcess = c("center", "scale"), ## standardization(z-score)
+                    trControl = ctrl)
+
+## Select Metric or Every for Decision to Tune Hyperparameter for impress model
+multi_model <-  train(medv ~ rm + b + crim + lstat + age, 
+                      data = train_data,
+                      #method = 'lm', ## linearRegression
+                      method = 'knn',
+                      metric = "RMSE",
+                      tuneGrid = data.frame(k = c(5, 7, 11)),
+                      preProcess = c("range", "nzv", "zv"), ## Normalization
+                      # preProcess = c("center", "scale"), ## standardization(z-score)
+                      trControl = ctrl)
+
+#predict new data
+pred_train <- predict(model_k11)
+prediction <- predict(model_k11, newdata = test_data)
+
+##rmse train
+rmse_train <- cal_rmse(actual = test_data$medv, pred_train)
+##mse train
+mse_train <-  cal_mse(actual = test_data$medv, pred_train)
+##mae train
+mae_train <- cal_mae(actual = test_data$medv, pred_train)
+
+#rmse test
+rmse_test <- cal_rmse(actual = test_data$medv, prediction)
+#mse test
+mse_tes <- cal_mse(actual = test_data$medv, prediction)
+#mae test
+mae_test <- cal_mae(actual = test_data$medv, prediction)
+
 
 # Variable Importance
 varImp(model)
