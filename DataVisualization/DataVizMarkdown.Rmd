@@ -1,0 +1,39 @@
+---
+title: "Data Visualization with boaty"
+author: "Boaty"
+date: "2023-07-25"
+output: html_document
+---
+
+
+# Hello thiraphat
+## DataVisualization with boaty
+
+
+### movie lover
+- DC
+- Marvel
+- Bad guy
+
+### image
+
+![Beautiful of programming](https://th.bing.com/th/id/OIP.a0-umddA7Nc0NaPLbeNSDQHaBe?w=329&h=70&c=7&r=0&o=5&pid=1.7)
+
+
+## My Chart 
+
+```{r}
+  library(tidyverse)
+  mtcars %>%
+    ggplot(aes(hp, mpg)) + 
+    geom_point() + 
+    geom_smooth() + 
+    labs(
+      title = "First Chart",
+      subtitle = "Hp vs MPG",
+      x = "Horse Power",
+      y = "Mile per gallon",
+      caption = "Source: Boaty"
+    ) + 
+    theme_minimal()
+```
